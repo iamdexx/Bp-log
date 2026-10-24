@@ -1,0 +1,11 @@
+# Xcode
+*.xcodeproj
+*.xcworkspace
+!*.xcodeproj/project.pbxproj
+xcuserdata/
+DerivedData/
+.build/
+*.ipa
+*.dSYM.zip
+.swiftpm/
+.DS_Store
