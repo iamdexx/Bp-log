@@ -24,21 +24,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app || sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | tail -1)"
+        run: |
+          XC="$(ls -d /Applications/Xcode_16.4*.app 2>/dev/null | tail -1)"
+          if [ -n "$XC" ]; then sudo xcode-select -s "$XC"; fi
+          xcodebuild -version
+          xcrun simctl list runtimes
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate project
         run: xcodegen generate
       - name: Build and test
         run: |
-          set -o pipefail
           xcodebuild test \
             -project BPLog.xcodeproj \
             -scheme BPLog \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty || xcodebuild test -project BPLog.xcodeproj -scheme BPLog -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
