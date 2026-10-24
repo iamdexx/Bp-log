@@ -17,6 +17,7 @@ struct LogReadingView: View {
     @State private var date = Date()
     @State private var note = ""
     @State private var arm = "Left"
+    @State private var showScan = false
     @FocusState private var focus: Field?
 
     enum Field { case systolic, diastolic, pulse }
@@ -37,6 +38,17 @@ struct LogReadingView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if existing == nil {
+                    Section {
+                        Button {
+                            showScan = true
+                        } label: {
+                            Label("Scan the cuff screen with the camera", systemImage: "camera.viewfinder").font(.headline)
+                        }
+                    } footer: {
+                        Text("Or type the numbers below.")
+                    }
+                }
                 Section {
                     HStack(spacing: 12) {
                         NumberField(title: "Systolic", subtitle: "top number", text: $systolic, field: .systolic, focus: $focus)
@@ -74,6 +86,13 @@ struct LogReadingView: View {
                     .pickerStyle(.segmented)
                     TextField("Note (meds, stress, after a walk...)", text: $note, axis: .vertical)
                         .lineLimit(1...3)
+                }
+            }
+            .sheet(isPresented: $showScan) {
+                CuffScanView { r in
+                    systolic = String(r.systolic); diastolic = String(r.diastolic)
+                    if let p = r.pulse { pulse = String(p) }
+                    focus = nil
                 }
             }
             .navigationTitle(existing == nil ? "New reading" : "Edit reading")
