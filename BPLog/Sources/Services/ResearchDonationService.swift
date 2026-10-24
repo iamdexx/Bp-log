@@ -7,6 +7,7 @@ enum ResearchDonationService {
     /// Set when the EticaLabs intake endpoint is live. Nil means the toggle collects nothing and sends nothing.
     static let endpoint: URL? = nil
 
+    @MainActor
     static func donateIfDue(samples: [BPSample], settings: AppSettings) async {
         guard settings.researchDonationEnabled, let endpoint else { return }
         let cal = Calendar(identifier: .iso8601)
