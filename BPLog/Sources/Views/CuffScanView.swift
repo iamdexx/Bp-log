@@ -63,7 +63,12 @@ struct CuffScanView: View {
             .onChange(of: pickerItem) { _, item in
                 guard let item else { return }
                 Task {
-                    if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) { process(img) }
+                    if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) {
+                        process(img)
+                    } else {
+                        failed = true
+                    }
+                    pickerItem = nil
                 }
             }
         }
