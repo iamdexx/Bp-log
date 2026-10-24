@@ -40,8 +40,8 @@ jobs:
             -scheme BPLog \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -skipPackagePluginValidation \
-            -quiet \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee xcodebuild.log | grep -E "error:|Test Suite|Test Case .* (passed|failed)|Executed|TEST (SUCCEEDED|FAILED)" || true
+          grep -q "TEST SUCCEEDED" xcodebuild.log
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
