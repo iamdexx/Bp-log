@@ -29,8 +29,9 @@ struct CuffScanView: View {
                     BigButton(title: "Use these numbers", systemImage: "checkmark") { onResult(r); dismiss() }
                     Button("Retake") { reading = nil; image = nil; showCamera = true }
                 } else if failed {
-                    EmptyState(symbol: "camera.metering.unknown", title: "Couldn't read it",
-                               text: "Get closer so the three big numbers fill the frame, and avoid glare.")
+                    EmptyState(title: "Couldn't read it",
+                               message: "Get closer so the three big numbers fill the frame, and avoid glare.",
+                               systemImage: "camera.metering.unknown")
                     BigButton(title: "Try again", systemImage: "camera") { failed = false; showCamera = true }
                     Button("Type them in instead") { dismiss() }
                 }
