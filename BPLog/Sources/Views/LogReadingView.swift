@@ -91,7 +91,7 @@ struct LogReadingView: View {
             .sheet(isPresented: $showScan) {
                 CuffScanView { r in
                     systolic = String(r.systolic); diastolic = String(r.diastolic)
-                    if let p = r.pulse { pulse = String(p) }
+                    pulse = r.pulse.map(String.init) ?? ""
                     focus = nil
                 }
             }

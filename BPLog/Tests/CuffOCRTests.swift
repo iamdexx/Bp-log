@@ -14,6 +14,11 @@ final class CuffOCRTests: XCTestCase {
         XCTAssertNil(CuffOCR.pick([(128, 0.7, 0.2)]))
     }
 
+    func testAcceptsLowButValidReading() {
+        let r = CuffOCR.pick([(68, 0.7, 0.2), (38, 0.45, 0.2), (28, 0.2, 0.15)])
+        XCTAssertEqual(r, .init(systolic: 68, diastolic: 38, pulse: 28))
+    }
+
     func testPulseOptional() {
         let r = CuffOCR.pick([(140, 0.7, 0.2), (90, 0.4, 0.2)])
         XCTAssertEqual(r, .init(systolic: 140, diastolic: 90, pulse: nil))

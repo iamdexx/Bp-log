@@ -11,6 +11,7 @@ struct CuffScanView: View {
     @State private var failed = false
     @State private var showCamera = true
     @State private var pickerItem: PhotosPickerItem?
+    private var hasCamera: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
     var body: some View {
         NavigationStack {
@@ -34,9 +35,17 @@ struct CuffScanView: View {
                                systemImage: "camera.metering.unknown")
                     BigButton(title: "Try again", systemImage: "camera") { failed = false; showCamera = true }
                     Button("Type them in instead") { dismiss() }
+                } else if !showCamera {
+                    EmptyState(title: "Point the camera at the cuff screen",
+                               message: "Fill the frame with the three big numbers.",
+                               systemImage: "camera.viewfinder")
+                    if hasCamera {
+                        BigButton(title: "Open camera", systemImage: "camera") { showCamera = true }
+                    }
+                    Button("Type them in instead") { dismiss() }
                 }
                 Spacer()
-                if !UIImagePickerController.isSourceTypeAvailable(.camera) {
+                if !hasCamera {
                     PhotosPicker("Choose a photo", selection: $pickerItem, matching: .images)
                 }
             }
@@ -44,7 +53,7 @@ struct CuffScanView: View {
             .navigationTitle("Scan cuff")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .fullScreenCover(isPresented: $showCamera) {
-                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                if hasCamera {
                     CameraPicker { img in showCamera = false; if let img { process(img) } }
                         .ignoresSafeArea()
                 } else {

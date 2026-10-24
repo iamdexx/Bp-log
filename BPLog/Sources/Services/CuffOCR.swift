@@ -1,4 +1,5 @@
 import Vision
+import BPCore
 import UIKit
 
 /// Reads systolic / diastolic / pulse off a photo of a home cuff display.
@@ -29,7 +30,7 @@ enum CuffOCR {
             let cleaned = text.replacingOccurrences(of: "O", with: "0").replacingOccurrences(of: "o", with: "0")
                 .replacingOccurrences(of: "I", with: "1").replacingOccurrences(of: "l", with: "1")
             for part in cleaned.split(whereSeparator: { !$0.isNumber }) {
-                if let v = Int(part), (30...260).contains(v) {
+                if let v = Int(part), (BPValidation.pulseRange.lowerBound...BPValidation.systolicRange.upperBound).contains(v) {
                     tokens.append((v, o.boundingBox.midY, o.boundingBox.height))
                 }
             }
@@ -45,9 +46,9 @@ enum CuffOCR {
         let big = tokens.filter { $0.2 >= maxH * 0.45 }.sorted { $0.1 > $1.1 }
         guard big.count >= 2 else { return nil }
         let sys = big[0].0, dia = big[1].0
-        guard (70...260).contains(sys), (40...160).contains(dia), sys > dia else { return nil }
+        guard BPValidation.systolicRange.contains(sys), BPValidation.diastolicRange.contains(dia), sys > dia else { return nil }
         var pulse: Int? = nil
-        if big.count >= 3, (30...220).contains(big[2].0) { pulse = big[2].0 }
+        if big.count >= 3, BPValidation.pulseRange.contains(big[2].0) { pulse = big[2].0 }
         return Result(systolic: sys, diastolic: dia, pulse: pulse)
     }
 }
