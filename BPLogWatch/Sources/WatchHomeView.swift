@@ -77,7 +77,6 @@ struct WatchLogView: View {
                 .disabled(dia >= sys)
             }
         }
-        .navigationTitle("New reading")
     }
 
     private var current: Binding<Double> { [$sys, $dia, $pulse][step] }
