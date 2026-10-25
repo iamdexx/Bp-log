@@ -10,7 +10,7 @@ struct PaywallView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                Image(systemName: "heart.text.square.fill").font(.system(size: 56)).foregroundStyle(.red)
+                Image(systemName: "heart.text.square.fill").font(.system(size: 56)).foregroundStyle(.tint)
                 Text("Remove the ads").font(.title.weight(.bold))
                 Text("Every feature is already free. Going ad-free just gives you a cleaner screen and supports an independent app.")
                     .multilineTextAlignment(.center).foregroundStyle(.secondary).padding(.horizontal)

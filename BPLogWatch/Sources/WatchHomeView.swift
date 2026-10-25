@@ -25,7 +25,7 @@ struct WatchHomeView: View {
                     }
                     Button { showLog = true } label: { Label("Log reading", systemImage: "plus.circle.fill") }
                         .buttonStyle(.borderedProminent)
-                        .tint(.red)
+                        .tint(Color(hex: "#55c28a"))
                     if let sent = link.lastSent {
                         Text("Sent \(sent, style: .time)").font(.caption2).foregroundStyle(.secondary)
                     }
