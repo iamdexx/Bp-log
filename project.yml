@@ -82,6 +82,7 @@ targets:
     platform: watchOS
     sources:
       - path: BPLogWatch/Sources
+      - path: BPLogWatch/Resources
     dependencies:
       - target: BPLogWatchWidget
       - sdk: WatchConnectivity.framework
@@ -100,6 +101,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.eticahub.bplog.watchkitapp
         TARGETED_DEVICE_FAMILY: "4"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         SKIP_INSTALL: true
