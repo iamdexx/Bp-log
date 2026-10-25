@@ -73,6 +73,10 @@ struct ReadingRow: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                if !reading.tags.isEmpty {
+                    Text(reading.tags.map(\.title).sorted().joined(separator: " · "))
+                        .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                }
             }
             Spacer()
             CategoryPill(category: reading.category, compact: true)
@@ -94,7 +98,7 @@ struct EmptyState: View {
 struct LegendView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(BPCategory.allCases, id: \.self) { c in
+            ForEach(BPGuideline.active.categories, id: \.self) { c in
                 HStack(spacing: 10) {
                     Circle().fill(c.color).frame(width: 12, height: 12)
                     Text(c.title).font(.subheadline.weight(.medium))

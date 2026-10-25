@@ -3,10 +3,16 @@ import SwiftData
 import Charts
 
 struct VitalsView: View {
+    let profileID: UUID?
     @Environment(\.modelContext) private var context
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var health: HealthKitService
-    @Query(sort: \VitalEntry.date, order: .reverse) private var entries: [VitalEntry]
+    @Query private var entries: [VitalEntry]
+
+    init(profileID: UUID?) {
+        self.profileID = profileID
+        _entries = Query(filter: #Predicate<VitalEntry> { $0.profileID == profileID }, sort: [SortDescriptor(\VitalEntry.date, order: .reverse)])
+    }
     @State private var kind: VitalKind = .weight
     @State private var showAdd = false
 
@@ -53,7 +59,7 @@ struct VitalsView: View {
                     Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Add")
                 }
             }
-            .sheet(isPresented: $showAdd) { AddVitalView(kind: kind) }
+            .sheet(isPresented: $showAdd) { AddVitalView(profileID: profileID, kind: kind) }
         }
     }
 
@@ -80,6 +86,7 @@ struct VitalsView: View {
 }
 
 struct AddVitalView: View {
+    var profileID: UUID? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @EnvironmentObject private var settings: AppSettings
@@ -115,7 +122,7 @@ struct AddVitalView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         guard let value else { return }
-                        let e = VitalEntry(date: date, kind: kind, value: value)
+                        let e = VitalEntry(date: date, kind: kind, value: value, profileID: profileID)
                         context.insert(e)
                         try? context.save()
                         if settings.healthKitSyncEnabled { Task { await health.save(e) } }

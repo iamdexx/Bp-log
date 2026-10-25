@@ -3,10 +3,16 @@ import SwiftData
 import BPCore
 
 struct HistoryView: View {
+    let profileID: UUID?
     @Environment(\.modelContext) private var context
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var health: HealthKitService
-    @Query(sort: \Reading.date, order: .reverse) private var readings: [Reading]
+    @Query private var readings: [Reading]
+
+    init(profileID: UUID?) {
+        self.profileID = profileID
+        _readings = Query(filter: #Predicate<Reading> { $0.profileID == profileID }, sort: [SortDescriptor(\Reading.date, order: .reverse)])
+    }
     @State private var editing: Reading?
     @State private var showLog = false
     @State private var filter: BPCategory?
@@ -52,7 +58,7 @@ struct HistoryView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button("All readings") { filter = nil }
-                        ForEach(BPCategory.allCases, id: \.self) { c in
+                        ForEach(settings.guideline.categories, id: \.self) { c in
                             Button(c.title) { filter = c }
                         }
                     } label: {
@@ -65,7 +71,7 @@ struct HistoryView: View {
                 }
             }
             .sheet(item: $editing) { LogReadingView(existing: $0) }
-            .sheet(isPresented: $showLog) { LogReadingView() }
+            .sheet(isPresented: $showLog) { LogReadingView(profileID: profileID) }
         }
     }
 

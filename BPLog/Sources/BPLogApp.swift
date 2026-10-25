@@ -7,9 +7,10 @@ struct BPLogApp: App {
     @StateObject private var store = StoreService()
     @StateObject private var settings = AppSettings.shared
     @StateObject private var health = HealthKitService.shared
+    @StateObject private var lock = AppLockService()
 
     let container: ModelContainer = {
-        let schema = Schema([Reading.self, VitalEntry.self])
+        let schema = Schema([Reading.self, VitalEntry.self, Profile.self, Medication.self, MedDose.self])
         let cloud = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
         if let c = try? ModelContainer(for: schema, configurations: [cloud]) { return c }
         let local = ModelConfiguration(schema: schema, cloudKitDatabase: .none)
@@ -26,6 +27,7 @@ struct BPLogApp: App {
                 .environmentObject(store)
                 .environmentObject(settings)
                 .environmentObject(health)
+                .environmentObject(lock)
         }
         .modelContainer(container)
     }

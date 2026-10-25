@@ -1,6 +1,6 @@
 import Foundation
 
-/// American Heart Association / ACC 2017 blood pressure categories.
+/// Six-level blood pressure category. Thresholds and labels come from `BPGuideline.active`.
 public enum BPCategory: Int, CaseIterable, Codable, Sendable, Comparable {
     case low = 0
     case normal
@@ -11,48 +11,17 @@ public enum BPCategory: Int, CaseIterable, Codable, Sendable, Comparable {
 
     public static func < (a: BPCategory, b: BPCategory) -> Bool { a.rawValue < b.rawValue }
 
+    /// Classifies under the active guideline (`BPGuideline.active`, AHA by default).
     public static func classify(systolic: Int, diastolic: Int) -> BPCategory {
-        if systolic > 180 || diastolic > 120 { return .crisis }
-        if systolic >= 140 || diastolic >= 90 { return .stage2 }
-        if systolic >= 130 || diastolic >= 80 { return .stage1 }
-        if systolic >= 120 { return .elevated }
-        if systolic < 90 || diastolic < 60 { return .low }
-        return .normal
+        BPGuideline.active.classify(systolic: systolic, diastolic: diastolic)
     }
 
-    public var title: String {
-        switch self {
-        case .low: return "Low"
-        case .normal: return "Normal"
-        case .elevated: return "Elevated"
-        case .stage1: return "High (Stage 1)"
-        case .stage2: return "High (Stage 2)"
-        case .crisis: return "Very High"
-        }
-    }
+    public var title: String { BPGuideline.active.title(for: self) }
 
-    public var shortTitle: String {
-        switch self {
-        case .low: return "Low"
-        case .normal: return "Normal"
-        case .elevated: return "Elevated"
-        case .stage1: return "Stage 1"
-        case .stage2: return "Stage 2"
-        case .crisis: return "Crisis"
-        }
-    }
+    public var shortTitle: String { BPGuideline.active.shortTitle(for: self) }
 
     /// Plain-language range text shown on the chart legend.
-    public var rangeText: String {
-        switch self {
-        case .low: return "under 90 / under 60"
-        case .normal: return "under 120 and under 80"
-        case .elevated: return "120 to 129 and under 80"
-        case .stage1: return "130 to 139 or 80 to 89"
-        case .stage2: return "140 or more, or 90 or more"
-        case .crisis: return "over 180 or over 120"
-        }
-    }
+    public var rangeText: String { BPGuideline.active.rangeText(for: self) }
 
     /// Short, non-diagnostic guidance. The app is a log, not a doctor.
     public var guidance: String {

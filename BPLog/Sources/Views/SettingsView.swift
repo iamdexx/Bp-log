@@ -1,13 +1,17 @@
 import SwiftUI
 import SwiftData
+import BPCore
 
 struct SettingsView: View {
+    var profileID: UUID? = nil
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var health: HealthKitService
+    @EnvironmentObject private var lock: AppLockService
     @Environment(\.modelContext) private var context
     @State private var showPaywall = false
     @State private var importResult: String?
+    @State private var lockError: String?
 
     var body: some View {
         NavigationStack {
@@ -26,6 +30,46 @@ struct SettingsView: View {
                     }
                     Button("Restore purchases") { Task { await store.restore() } }
                 } header: { Text("Plan") }
+
+                Section {
+                    NavigationLink { MedicationsView(profileID: profileID) } label: { Label("Medications", systemImage: "pills.fill") }
+                    NavigationLink { ProfilesView() } label: { Label("People (family profiles)", systemImage: "person.2.fill") }
+                } header: { Text("Tracking") } footer: {
+                    Text("Add the people you log for. Each has separate readings, meds and reports. Free, no limit.")
+                }
+
+                Section {
+                    Picker("Guideline", selection: Binding(get: { settings.guideline }, set: { settings.guideline = $0 })) {
+                        ForEach(BPGuideline.allCases) { Text($0.title).tag($0) }
+                    }
+                    if settings.guideline == .custom {
+                        Stepper("Top number under \(settings.targetSystolic)", value: $settings.targetSystolic, in: 100...180, step: 5)
+                        Stepper("Bottom number under \(settings.targetDiastolic)", value: $settings.targetDiastolic, in: 60...110, step: 5)
+                    }
+                    LegendView().padding(.vertical, 4)
+                } header: { Text("Blood pressure ranges") } footer: {
+                    Text(settings.guideline.sourceText + " Colours, labels and the report follow this choice.")
+                }
+
+                Section {
+                    Toggle(isOn: Binding(
+                        get: { settings.appLockEnabled },
+                        set: { on in
+                            Task {
+                                if on {
+                                    guard AppLockService.isAvailable else { lockError = "Set a passcode or Face ID on this iPhone first."; return }
+                                    if await lock.unlock(reason: "Confirm it's you to turn on the lock") { settings.appLockEnabled = true; lockError = nil }
+                                } else {
+                                    if await lock.unlock(reason: "Confirm it's you to turn off the lock") { settings.appLockEnabled = false }
+                                }
+                            }
+                        })) {
+                        Label("Lock with \(AppLockService.biometryName)", systemImage: "lock.fill")
+                    }
+                    if let lockError { Text(lockError).font(.footnote).foregroundStyle(.red) }
+                } header: { Text("Privacy") } footer: {
+                    Text("Asks for \(AppLockService.biometryName) every time you come back to the app.")
+                }
 
                 Section("Apple Health") {
                     Toggle("Sync with Apple Health", isOn: Binding(
