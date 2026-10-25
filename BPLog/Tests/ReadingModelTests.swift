@@ -1,10 +1,15 @@
 import XCTest
 import SwiftData
+import BPCore
 @testable import BPLog
 
 final class ReadingModelTests: XCTestCase {
+    /// The test host is the real app, which applies whatever guideline the simulator has saved; pin the one this test expects.
     @MainActor
     func testReadingRoundTripsInMemory() throws {
+        let saved = BPGuideline.active
+        BPGuideline.active = .aha2017
+        defer { BPGuideline.active = saved }
         let container = try ModelContainer(for: Reading.self, VitalEntry.self,
                                            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let ctx = container.mainContext
