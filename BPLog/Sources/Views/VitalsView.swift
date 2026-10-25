@@ -27,6 +27,17 @@ struct VitalsView: View {
                 .pickerStyle(.segmented)
                 .padding()
 
+                NavigationLink { HeartRhythmView() } label: {
+                    Label("ECG and irregular rhythm (from Apple Watch)", systemImage: "waveform.path.ecg.rectangle")
+                        .font(.subheadline.weight(.medium))
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .padding(.horizontal)
+                        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+                        .padding(.horizontal)
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 8)
+
                 if forKind.isEmpty {
                     EmptyState(title: "No \(kind.title.lowercased()) yet", message: "Tap + to add one. These also go to Apple Health if sync is on.", systemImage: kind.symbol)
                 } else {

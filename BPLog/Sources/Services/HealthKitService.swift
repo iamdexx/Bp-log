@@ -20,13 +20,15 @@ final class HealthKitService: ObservableObject {
     private var bpCorrelationType: HKCorrelationType { HKCorrelationType(.bloodPressure) }
 
     private var allTypes: Set<HKSampleType> { [systolicType, diastolicType, heartRateType, spo2Type, weightType] }
+    private var ecgType: HKElectrocardiogramType { HKObjectType.electrocardiogramType() }
+    private var irregularRhythmType: HKCategoryType { HKCategoryType(.irregularHeartRhythmEvent) }
 
     private init() {}
 
     func requestAuthorization() async -> Bool {
         guard isAvailable else { return false }
         do {
-            try await store.requestAuthorization(toShare: allTypes, read: allTypes.union([bpCorrelationType]))
+            try await store.requestAuthorization(toShare: allTypes, read: allTypes.union([bpCorrelationType, ecgType, irregularRhythmType]))
             isAuthorized = true
             return true
         } catch {
@@ -128,5 +130,49 @@ final class HealthKitService: ObservableObject {
         }
         try? context.save()
         return imported
+    }
+
+    // MARK: ECG and rhythm (read only; Apple Watch writes these)
+
+    struct ECGRecord: Identifiable, Hashable {
+        let id: UUID
+        let date: Date
+        let classification: HKElectrocardiogram.Classification
+        let averageHeartRate: Int?
+        let symptomsStatus: HKElectrocardiogram.SymptomsStatus
+
+        var title: String {
+            switch classification {
+            case .sinusRhythm: return "Sinus rhythm"
+            case .atrialFibrillation: return "Atrial fibrillation"
+            case .inconclusiveLowHeartRate: return "Inconclusive (low heart rate)"
+            case .inconclusiveHighHeartRate: return "Inconclusive (high heart rate)"
+            case .inconclusivePoorReading: return "Inconclusive (poor recording)"
+            case .inconclusiveOther: return "Inconclusive"
+            case .notSet: return "Not classified"
+            case .unrecognized: return "Unrecognized"
+            @unknown default: return "Unknown"
+            }
+        }
+
+        var isConcern: Bool { classification == .atrialFibrillation }
+    }
+
+    func fetchECGs(limit: Int = 50) async -> [ECGRecord] {
+        guard isAvailable else { return [] }
+        let d = HKSampleQueryDescriptor(predicates: [.electrocardiogram()], sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)], limit: limit)
+        guard let samples = try? await d.result(for: store) else { return [] }
+        return samples.map { e in
+            ECGRecord(id: e.uuid, date: e.startDate, classification: e.classification,
+                      averageHeartRate: e.averageHeartRate.map { Int($0.doubleValue(for: HKUnit.count().unitDivided(by: .minute())).rounded()) },
+                      symptomsStatus: e.symptomsStatus)
+        }
+    }
+
+    /// Dates of "irregular rhythm" notifications from Apple Watch.
+    func fetchIrregularRhythmEvents(limit: Int = 50) async -> [Date] {
+        guard isAvailable else { return [] }
+        let d = HKSampleQueryDescriptor(predicates: [.categorySample(type: irregularRhythmType)], sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)], limit: limit)
+        return ((try? await d.result(for: store)) ?? []).map(\.startDate)
     }
 }

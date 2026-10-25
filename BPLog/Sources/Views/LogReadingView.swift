@@ -13,6 +13,7 @@ struct LogReadingView: View {
     var existing: Reading?
 
     @State private var tags: Set<ReadingTag> = []
+    @State private var source = "manual"
     @State private var systolic = ""
     @State private var diastolic = ""
     @State private var pulse = ""
@@ -20,6 +21,7 @@ struct LogReadingView: View {
     @State private var note = ""
     @State private var arm = "Left"
     @State private var showScan = false
+    @State private var showBluetooth = false
     @FocusState private var focus: Field?
 
     enum Field { case systolic, diastolic, pulse }
@@ -52,6 +54,11 @@ struct LogReadingView: View {
                             showScan = true
                         } label: {
                             Label("Scan the cuff screen with the camera", systemImage: "camera.viewfinder").font(.headline)
+                        }
+                        Button {
+                            showBluetooth = true
+                        } label: {
+                            Label("Get it from a Bluetooth cuff", systemImage: "antenna.radiowaves.left.and.right").font(.headline)
                         }
                     } footer: {
                         Text("Or type the numbers below.")
@@ -102,6 +109,16 @@ struct LogReadingView: View {
                     Text("Tap any that apply. Doctors like to know if a reading was before your pills or right after exercise.")
                 }
             }
+            .sheet(isPresented: $showBluetooth) {
+                BluetoothScanView { m in
+                    systolic = String(m.systolic); diastolic = String(m.diastolic)
+                    pulse = m.pulse.map(String.init) ?? ""
+                    if let d = m.date, abs(d.timeIntervalSinceNow) < 86_400 * 30 { date = d }
+                    if m.irregularPulse { tags.insert(.irregularHeartbeat) }
+                    source = "bluetooth"
+                    focus = nil
+                }
+            }
             .sheet(isPresented: $showScan) {
                 CuffScanView { r in
                     systolic = String(r.systolic); diastolic = String(r.diastolic)
@@ -149,7 +166,7 @@ struct LogReadingView: View {
             reading.date = date; reading.note = note; reading.arm = arm
             reading.tags = tags; reading.medsTaken = medsTakenFlag
         } else {
-            reading = Reading(date: date, systolic: sys, diastolic: dia, pulse: pul, note: note, arm: arm, profileID: profileID, tags: tags, medsTaken: medsTakenFlag)
+            reading = Reading(date: date, systolic: sys, diastolic: dia, pulse: pul, note: note, arm: arm, source: source, profileID: profileID, tags: tags, medsTaken: medsTakenFlag)
             context.insert(reading)
         }
         settings.defaultArm = arm

@@ -37,6 +37,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         NSHealthShareUsageDescription: BP Log reads blood pressure, heart rate, blood oxygen and weight from Apple Health so your history is complete.
         NSHealthUpdateUsageDescription: BP Log saves the readings you enter to Apple Health so your other health apps can see them.
+        NSBluetoothAlwaysUsageDescription: BP Log connects to your blood pressure cuff over Bluetooth to pull in readings automatically.
         NSFaceIDUsageDescription: Unlock BP Log with Face ID so only you can see your readings.
         NSCameraUsageDescription: Point the camera at your cuff screen to read the numbers automatically. Photos never leave your phone.
         NSUserTrackingUsageDescription: This lets us show ads that are more relevant to you on the free plan. You can say no and ads still work.
