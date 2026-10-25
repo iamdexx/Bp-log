@@ -6,6 +6,7 @@ struct RootView: View {
     @EnvironmentObject private var health: HealthKitService
     @EnvironmentObject private var lock: AppLockService
     @Environment(\.scenePhase) private var scenePhase
+    @State private var showLogFromLink = false
 
     var body: some View {
         ZStack {
@@ -20,6 +21,9 @@ struct RootView: View {
             }
         }
         .onAppear { if settings.appLockEnabled { lock.lock() } }
+        .onOpenURL { url in if url.host == "log" { showLogFromLink = true } }
+        .onReceive(NotificationCenter.default.publisher(for: .openNewReading)) { _ in showLogFromLink = true }
+        .sheet(isPresented: $showLogFromLink) { LogReadingView(profileID: settings.activeProfileUUID) }
         .onChange(of: scenePhase) { _, phase in
             guard settings.appLockEnabled else { return }
             if phase == .background { lock.lock() }

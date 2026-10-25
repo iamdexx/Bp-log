@@ -9,16 +9,11 @@ struct BPLogApp: App {
     @StateObject private var health = HealthKitService.shared
     @StateObject private var lock = AppLockService()
 
-    let container: ModelContainer = {
-        let schema = Schema([Reading.self, VitalEntry.self, Profile.self, Medication.self, MedDose.self])
-        let cloud = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
-        if let c = try? ModelContainer(for: schema, configurations: [cloud]) { return c }
-        let local = ModelConfiguration(schema: schema, cloudKitDatabase: .none)
-        return try! ModelContainer(for: schema, configurations: [local])
-    }()
+    let container = SharedContainer.make()
 
     init() {
         MobileAds.shared.start()
+        BPLogShortcuts.updateAppShortcutParameters()
     }
 
     var body: some Scene {

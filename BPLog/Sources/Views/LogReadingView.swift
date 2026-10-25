@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 import BPCore
 
 /// Add or edit a reading. Big fields, number pad, nothing clever.
@@ -171,6 +172,7 @@ struct LogReadingView: View {
         }
         settings.defaultArm = arm
         try? context.save()
+        WidgetCenter.shared.reloadAllTimelines()
         if settings.healthKitSyncEnabled {
             Task { await health.save(reading) }
         }

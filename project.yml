@@ -27,6 +27,7 @@ targets:
     dependencies:
       - package: BPCore
       - package: GoogleMobileAds
+      - target: BPLogWidget
     info:
       path: BPLog/Info.plist
       properties:
@@ -45,6 +46,9 @@ targets:
         SKAdNetworkItems:
           - SKAdNetworkIdentifier: cstr6suwn9.skadnetwork
         UIBackgroundModes: []
+        CFBundleURLTypes:
+          - CFBundleURLName: com.eticahub.bplog
+            CFBundleURLSchemes: [bplog]
     entitlements:
       path: BPLog/BPLog.entitlements
       properties:
@@ -53,6 +57,7 @@ targets:
         com.apple.developer.icloud-services: [CloudKit]
         com.apple.developer.icloud-container-identifiers: [iCloud.com.eticahub.bplog]
         com.apple.developer.in-app-payments: []
+        com.apple.security.application-groups: [group.com.eticahub.bplog]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.eticahub.bplog
@@ -70,3 +75,33 @@ targets:
     sources: [BPLog/Tests]
     dependencies:
       - target: BPLog
+  BPLogWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: BPLogWidget/Sources
+      - path: BPLog/Sources/Models/Reading.swift
+      - path: BPLog/Sources/Models/SharedContainer.swift
+    dependencies:
+      - package: BPCore
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: BPLogWidget/Info.plist
+      properties:
+        CFBundleDisplayName: BP Log
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: BPLogWidget/BPLogWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.eticahub.bplog]
+        com.apple.developer.icloud-services: [CloudKit]
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.eticahub.bplog]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.eticahub.bplog.widget
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        SKIP_INSTALL: true
