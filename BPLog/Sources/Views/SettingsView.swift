@@ -48,7 +48,7 @@ struct SettingsView: View {
                     }
                     LegendView().padding(.vertical, 4)
                 } header: { Text("Blood pressure ranges") } footer: {
-                    Text(settings.guideline.sourceText + " Colours, labels and the report follow this choice.")
+                    Text(settings.guideline.sourceText + " Colors, labels and the report follow this choice.")
                 }
 
                 Section {
