@@ -14,6 +14,7 @@ struct BPLogApp: App {
     init() {
         MobileAds.shared.start()
         BPLogShortcuts.updateAppShortcutParameters()
+        WatchSyncService.shared.start(container: container)
     }
 
     var body: some Scene {

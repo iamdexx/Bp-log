@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.eticahub
   deploymentTarget:
     iOS: "17.0"
+    watchOS: "10.0"
   xcodeVersion: "15.4"
   createIntermediateGroups: true
 settings:
@@ -28,6 +29,7 @@ targets:
       - package: BPCore
       - package: GoogleMobileAds
       - target: BPLogWidget
+      - target: BPLogWatch
     info:
       path: BPLog/Info.plist
       properties:
@@ -75,6 +77,57 @@ targets:
     sources: [BPLog/Tests]
     dependencies:
       - target: BPLog
+  BPLogWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: BPLogWatch/Sources
+    dependencies:
+      - target: BPLogWatchWidget
+      - sdk: WatchConnectivity.framework
+    info:
+      path: BPLogWatch/Info.plist
+      properties:
+        CFBundleDisplayName: BP Log
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.eticahub.bplog
+        WKRunsIndependentlyOfCompanionApp: false
+    entitlements:
+      path: BPLogWatch/BPLogWatch.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.eticahub.bplog.watch]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.eticahub.bplog.watchkitapp
+        TARGETED_DEVICE_FAMILY: "4"
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        SKIP_INSTALL: true
+  BPLogWatchWidget:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: BPLogWatchWidget/Sources
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: BPLogWatchWidget/Info.plist
+      properties:
+        CFBundleDisplayName: BP Log
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: BPLogWatchWidget/BPLogWatchWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.eticahub.bplog.watch]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.eticahub.bplog.watchkitapp.widget
+        TARGETED_DEVICE_FAMILY: "4"
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        SKIP_INSTALL: true
   BPLogWidget:
     type: app-extension
     platform: iOS

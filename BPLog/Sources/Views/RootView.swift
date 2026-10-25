@@ -70,5 +70,6 @@ private struct MainTabs: View {
         .task {
             await ResearchDonationService.donateIfDue(samples: readings.samples, settings: settings)
         }
+        .onChange(of: readings.count, initial: true) { WatchSyncService.shared.pushSummary(readings.samples) }
     }
 }
