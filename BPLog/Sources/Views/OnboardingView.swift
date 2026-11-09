@@ -9,7 +9,7 @@ struct OnboardingView: View {
     var body: some View {
         VStack {
             TabView(selection: $page) {
-                OnboardPage(symbol: "heart.text.square.fill", color: .red, title: "Your blood pressure, in one place",
+                OnboardPage(symbol: "heart.text.square.fill", color: .accentColor, title: "Your blood pressure, in one place",
                             text: "Log a reading in two taps. See right away if it is normal, elevated or high, using the American Heart Association ranges.").tag(0)
                 OnboardPage(symbol: "doc.text.fill", color: .blue, title: "A report your doctor will like",
                             text: "One tap makes a clean PDF with your averages, morning vs evening, and every reading. Share it from your phone.").tag(1)

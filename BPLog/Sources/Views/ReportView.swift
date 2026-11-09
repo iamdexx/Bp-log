@@ -4,13 +4,29 @@ import PDFKit
 import BPCore
 
 struct ReportView: View {
+    let profileID: UUID?
     @EnvironmentObject private var settings: AppSettings
-    @Query(sort: \Reading.date, order: .reverse) private var readings: [Reading]
+    @Query private var readings: [Reading]
+    @Query private var meds: [Medication]
+    @Query(sort: \Profile.sortOrder) private var profiles: [Profile]
     @State private var period: ReportPeriod = .month
     @State private var pdfURL: URL?
+    @State private var csvURL: URL?
+    @State private var shareItems: [Any] = []
     @State private var showShare = false
 
-    private var report: BPReport { BPReport(samples: readings.samples, period: period, patientName: settings.patientName) }
+    init(profileID: UUID?) {
+        self.profileID = profileID
+        _readings = Query(filter: #Predicate<Reading> { $0.profileID == profileID }, sort: [SortDescriptor(\Reading.date, order: .reverse)])
+        _meds = Query(filter: #Predicate<Medication> { $0.profileID == profileID && $0.isActive }, sort: [SortDescriptor(\Medication.createdAt)])
+    }
+
+    private var personName: String {
+        if let profileID { return profiles.first { $0.id == profileID }?.name ?? "" }
+        return settings.patientName
+    }
+    private var report: BPReport { BPReport(samples: readings.samples, period: period, patientName: personName) }
+    private var medNames: [String] { meds.map { [$0.name, $0.dose].filter { !$0.isEmpty }.joined(separator: " ") } }
 
     var body: some View {
         NavigationStack {
@@ -22,11 +38,24 @@ struct ReportView: View {
                     .pickerStyle(.segmented)
 
                     summary
-                    BigButton(title: "Share PDF with doctor", systemImage: "square.and.arrow.up") { share() }
+                    BigButton(title: "Share PDF with doctor", systemImage: "square.and.arrow.up") { share(csv: false) }
                         .disabled(report.samples.isEmpty)
-                    TextField("Your name on the report (optional)", text: $settings.patientName)
-                        .textFieldStyle(.roundedBorder)
-                        .textContentType(.name)
+                    HStack(spacing: 12) {
+                        Button { share(csv: true) } label: {
+                            Label("Email PDF + spreadsheet", systemImage: "envelope").frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.bordered)
+                        Button { exportCSVOnly() } label: {
+                            Label("CSV only", systemImage: "tablecells").frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .disabled(report.samples.isEmpty)
+                    if profileID == nil {
+                        TextField("Your name on the report (optional)", text: $settings.patientName)
+                            .textFieldStyle(.roundedBorder)
+                            .textContentType(.name)
+                    }
                     if let pdfURL {
                         PDFPreview(url: pdfURL)
                             .frame(height: 420)
@@ -38,9 +67,9 @@ struct ReportView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Doctor report")
             .sheet(isPresented: $showShare) {
-                if let pdfURL { ShareSheet(items: [pdfURL]) }
+                ShareSheet(items: shareItems)
             }
-            .task(id: "\(period.rawValue)-\(readings.count)-\(settings.patientName)") { regenerate() }
+            .task(id: "\(period.rawValue)-\(readings.count)-\(personName)-\(settings.guidelineRaw)-\(meds.count)") { regenerate() }
         }
     }
 
@@ -81,17 +110,30 @@ struct ReportView: View {
     }
 
     private func regenerate() {
-        guard !report.samples.isEmpty else { pdfURL = nil; return }
-        let data = PDFReportBuilder.render(report)
-        let name = "BP-Log-\(period.days)-days.pdf"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
-        try? data.write(to: url, options: .atomic)
-        pdfURL = url
+        guard !report.samples.isEmpty else { pdfURL = nil; csvURL = nil; return }
+        let data = PDFReportBuilder.render(report, medications: medNames)
+        let dir = FileManager.default.temporaryDirectory
+        let pdf = dir.appendingPathComponent("BP-Log-\(period.days)-days.pdf")
+        try? data.write(to: pdf, options: .atomic)
+        pdfURL = pdf
+        let inPeriod = readings.filter { r in report.samples.contains { $0.id == r.id } }
+        let csv = dir.appendingPathComponent("BP-Log-\(period.days)-days.csv")
+        try? CSVExporter.render(inPeriod).data(using: .utf8)?.write(to: csv, options: .atomic)
+        csvURL = csv
     }
 
-    private func share() {
+    private func share(csv: Bool) {
         if pdfURL == nil { regenerate() }
-        showShare = pdfURL != nil
+        guard let pdfURL else { return }
+        shareItems = csv ? [pdfURL, csvURL].compactMap { $0 } : [pdfURL]
+        showShare = true
+    }
+
+    private func exportCSVOnly() {
+        if csvURL == nil { regenerate() }
+        guard let csvURL else { return }
+        shareItems = [csvURL]
+        showShare = true
     }
 }
 

@@ -4,6 +4,11 @@ A private blood pressure logbook for iPhone. Log a reading in two taps, see wher
 
 - Everything stays on the phone (SwiftData + iCloud). No account, no server.
 - Apple Health sync for blood pressure, heart rate, blood oxygen and weight.
+- Scan the cuff screen with the camera; on-device OCR fills in the numbers.
+- Medications with a one-tap "took it" log; readings tagged before/after meds, exercise, stress, posture.
+- Family profiles (spouse, parent), each with their own readings and report. Free.
+- Pick the guideline: AHA (US), ESC/ESH (Europe), WHO, JNC 7, or your doctor's target.
+- Face ID / passcode lock. PDF and CSV export, share or email from the Report tab.
 - Free with a banner ad. Monthly or yearly removes ads.
 - Optional, off by default: donate anonymized weekly averages to EticaLabs research.
 
