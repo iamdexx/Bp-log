@@ -17,9 +17,11 @@ extension BPCategory {
 struct CategoryPill: View {
     let category: BPCategory
     var compact = false
+    /// Observed so the label re-renders when the guideline changes; `BPGuideline.active` alone is not state SwiftUI tracks.
+    @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
-        Text(compact ? category.shortTitle : category.title)
+        Text(compact ? settings.guideline.shortTitle(for: category) : settings.guideline.title(for: category))
             .font(compact ? .caption.weight(.semibold) : .subheadline.weight(.semibold))
             .foregroundStyle(.white)
             .padding(.horizontal, compact ? 8 : 12)
@@ -73,6 +75,10 @@ struct ReadingRow: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                if !reading.tags.isEmpty {
+                    Text(reading.tags.map(\.title).sorted().joined(separator: " · "))
+                        .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                }
             }
             Spacer()
             CategoryPill(category: reading.category, compact: true)
@@ -92,14 +98,17 @@ struct EmptyState: View {
 }
 
 struct LegendView: View {
+    @EnvironmentObject private var settings: AppSettings
+
     var body: some View {
+        let guideline = settings.guideline
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(BPCategory.allCases, id: \.self) { c in
+            ForEach(guideline.categories, id: \.self) { c in
                 HStack(spacing: 10) {
                     Circle().fill(c.color).frame(width: 12, height: 12)
-                    Text(c.title).font(.subheadline.weight(.medium))
+                    Text(guideline.title(for: c)).font(.subheadline.weight(.medium))
                     Spacer()
-                    Text(c.rangeText).font(.caption).foregroundStyle(.secondary)
+                    Text(guideline.rangeText(for: c)).font(.caption).foregroundStyle(.secondary)
                 }
             }
         }

@@ -7,7 +7,7 @@ enum PDFReportBuilder {
     private static let pageSize = CGRect(x: 0, y: 0, width: 612, height: 792)
     private static let margin: CGFloat = 40
 
-    static func render(_ report: BPReport) -> Data {
+    static func render(_ report: BPReport, medications: [String] = []) -> Data {
         let renderer = UIGraphicsPDFRenderer(bounds: pageSize, format: {
             let f = UIGraphicsPDFRendererFormat()
             f.documentInfo = [kCGPDFContextTitle as String: "Blood Pressure Log", kCGPDFContextCreator as String: "BP Log by EticaHub"]
@@ -17,6 +17,7 @@ enum PDFReportBuilder {
             var y = startPage(ctx, report: report)
 
             y = drawSummary(report, at: y)
+            if !medications.isEmpty { y = drawMedications(medications, at: y) }
             y = drawTimeOfDay(report, at: y)
             y = drawCategoryBreakdown(report, at: y)
             y = drawTable(title: "Daily averages", header: ["Date", "Readings", "Systolic", "Diastolic", "Pulse", "Range"],
@@ -90,6 +91,17 @@ enum PDFReportBuilder {
         return y
     }
 
+    private static func drawMedications(_ meds: [String], at y0: CGFloat) -> CGFloat {
+        var y = y0
+        "Current medications".draw(at: CGPoint(x: margin, y: y), withAttributes: attrs(13, weight: .semibold))
+        y += 18
+        let text = meds.joined(separator: ", ")
+        let rect = CGRect(x: margin, y: y, width: pageSize.width - margin * 2, height: 60)
+        let height = (text as NSString).boundingRect(with: CGSize(width: rect.width, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin], attributes: attrs(11), context: nil).height
+        (text as NSString).draw(in: CGRect(x: margin, y: y, width: rect.width, height: height), withAttributes: attrs(11))
+        return y + height + 14
+    }
+
     private static func drawTimeOfDay(_ r: BPReport, at y0: CGFloat) -> CGFloat {
         var y = y0
         "By time of day".draw(at: CGPoint(x: margin, y: y), withAttributes: attrs(13, weight: .semibold))
@@ -106,7 +118,7 @@ enum PDFReportBuilder {
 
     private static func drawCategoryBreakdown(_ r: BPReport, at y0: CGFloat) -> CGFloat {
         var y = y0
-        "Readings by range (AHA)".draw(at: CGPoint(x: margin, y: y), withAttributes: attrs(13, weight: .semibold))
+        "Readings by range (\(BPGuideline.active.shortTitle))".draw(at: CGPoint(x: margin, y: y), withAttributes: attrs(13, weight: .semibold))
         y += 20
         let total = max(1, r.samples.count)
         let barWidth = pageSize.width - margin * 2

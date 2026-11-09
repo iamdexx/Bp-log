@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import BPCore
 
 /// Small on-device preferences. Nothing here leaves the phone.
 @MainActor
@@ -17,6 +18,25 @@ final class AppSettings: ObservableObject {
     @AppStorage("lastResearchDonationISOWeek") var lastResearchDonationISOWeek = ""
     @AppStorage("defaultArm") var defaultArm = "Left"
     @AppStorage("lastReviewPromptReadingCount") var lastReviewPromptReadingCount = 0
+    /// Empty string = the default profile (readings with profileID == nil).
+    @AppStorage("activeProfileID") var activeProfileID = ""
+    @AppStorage("guideline") var guidelineRaw = BPGuideline.aha2017.rawKey
+    @AppStorage("targetSystolic") var targetSystolic = 130
+    @AppStorage("targetDiastolic") var targetDiastolic = 80
+    @AppStorage("appLockEnabled") var appLockEnabled = false
 
-    private init() {}
+    private init() { applyGuideline() }
+
+    var activeProfileUUID: UUID? { UUID(uuidString: activeProfileID) }
+
+    var guideline: BPGuideline {
+        get { BPGuideline(rawKey: guidelineRaw) }
+        set { guidelineRaw = newValue.rawKey; applyGuideline() }
+    }
+
+    /// Pushes the chosen guideline into BPCore so every category label and colour follows it.
+    func applyGuideline() {
+        BPGuideline.customTarget = (targetSystolic, targetDiastolic)
+        BPGuideline.active = BPGuideline(rawKey: guidelineRaw)
+    }
 }

@@ -3,9 +3,16 @@ import SwiftData
 import BPCore
 
 struct HomeView: View {
-    @Query(sort: \Reading.date, order: .reverse) private var readings: [Reading]
+    let profileID: UUID?
+    @EnvironmentObject private var settings: AppSettings
+    @Query private var readings: [Reading]
     @State private var showLog = false
     @State private var showLegend = false
+
+    init(profileID: UUID?) {
+        self.profileID = profileID
+        _readings = Query(filter: #Predicate<Reading> { $0.profileID == profileID }, sort: [SortDescriptor(\Reading.date, order: .reverse)])
+    }
 
     private var samples: [BPSample] { readings.samples }
     private var latest: Reading? { readings.first }
@@ -20,6 +27,7 @@ struct HomeView: View {
                     latestCard
                     BigButton(title: "Log a reading", systemImage: "plus.circle.fill") { showLog = true }
                         .padding(.horizontal)
+                    MedsTodayCard(profileID: profileID)
                     if !readings.isEmpty {
                         averagesCard
                         TrendChart(samples: BPStats.samples(samples, lastDays: 30))
@@ -33,18 +41,19 @@ struct HomeView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("BP Log")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) { ProfileMenu() }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showLegend = true } label: { Image(systemName: "info.circle") }
                         .accessibilityLabel("What the colors mean")
                 }
             }
-            .sheet(isPresented: $showLog) { LogReadingView() }
+            .sheet(isPresented: $showLog) { LogReadingView(profileID: profileID) }
             .sheet(isPresented: $showLegend) {
                 NavigationStack {
                     List {
-                        Section("Blood pressure ranges (AHA)") { LegendView() }
+                        Section("Blood pressure ranges (\(settings.guideline.shortTitle))") { LegendView() }
                         Section {
-                            Text("These ranges come from the American Heart Association. BP Log is a logbook. It does not diagnose or treat anything. Talk to your doctor about what your numbers mean for you.")
+                            Text("\(settings.guideline.sourceText) You can switch guidelines in Settings. BP Log is a logbook. It does not diagnose or treat anything. Talk to your doctor about what your numbers mean for you.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     }
